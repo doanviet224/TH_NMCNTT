@@ -1,7 +1,7 @@
 import pygame
 
 from config import WIDTH, HEIGHT, FPS, WINDOW_TITLE, WHITE
-from states import MENU, PLAYING
+from src.core.states import MENU, PLAYING
 
 from src.ui.menu import draw_menu, handle_menu_event
 from src.board.board import draw_board
