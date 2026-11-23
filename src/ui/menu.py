@@ -1,9 +1,11 @@
 import pygame
 
 try:
-    from .buttons import Button   # package
+    from .buttons import Button   # package bth
+    from . import board
 except ImportError:
     from buttons import Button    # tui chạy trực tiếp để test
+    import board
 
 BG = (30, 36, 100)
 WHITE = (255, 255, 255)
@@ -18,7 +20,7 @@ _fonts = {}
 
 def font(size):
     if size not in _fonts:
-        _fonts[size] = pygame.font.SysFont("TimeNewsRoman", size, bold=True)
+        _fonts[size] = pygame.font.SysFont("arial", size, bold=True)
     return _fonts[size]
 
 
@@ -29,7 +31,7 @@ def make_button(x, y, w, h, text, color, size=28):
     label = font(size).render(text, True, WHITE)
     img.blit(label, label.get_rect(center=(w // 2, h // 2)))
     btn = Button(x, y, img, 1)
-    btn.click = pygame.mouse.get_pressed()[0] == 1  # nút mới: phải nhả chuột rồi mới tính là click
+    btn.click = pygame.mouse.get_pressed()[0] == 1  # nút mới: phải nhả chuột rồi mới tính click
     return btn
 
 
@@ -62,16 +64,19 @@ def run_menu(screen=None, clock=None):
 
     def clamp_win():
         s["win"] = min(s["win"], SIZE_MAX if s["inf"] else s["size"])
+
     def change(key, d):
         if key == "size" and s["inf"]:
             return
         s[key] = max(4, min(SIZE_MAX, s[key] + d))
         clamp_win()
+
     def toggle(key):
         s[key] = not s[key]
         clamp_win()
+
     def build():
-        """Trả về (list (nút,hàm), list chữ)."""
+        """Trả về (danh sách (nút, hàm), danh sách chữ)."""
         page, labels = s["page"], []
         big = lambda y, text, color, fn: (make_button(cx, y, 300, 64, text, color), fn)
         if page == "start":
@@ -133,6 +138,15 @@ def run_menu(screen=None, clock=None):
             buttons, labels = build()
         pygame.display.flip()
     return out["r"]
+def run_game(screen=None):
+    """Menu -> chọn chế độ -> truyền cấu hình sang Board -> hết ván quay lại menu."""
+    pygame.init()
+    screen = screen or pygame.display.set_mode((board.WIDTH, board.HEIGHT))
+    while True:
+        cfg = run_menu(screen)
+        if cfg is None:
+            return
+        board.run(screen, cfg)
 if __name__ == "__main__":
-    print("Cấu hình trả về:", run_menu())
+    run_game()
     pygame.quit()
