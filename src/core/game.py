@@ -3,8 +3,9 @@ import pygame
 from config import WIDTH, HEIGHT, FPS, WINDOW_TITLE, WHITE
 from src.core.states import MENU, PLAYING
 
-from src.ui.menu import draw_menu, handle_menu_event
+from src.ui.menu import run_menu
 from src.board.board import draw_board
+
 
 class Game:
     def __init__(self):
@@ -17,6 +18,8 @@ class Game:
         self.running = True
         self.state = MENU
 
+        self.game_config = None
+
     def change_state(self, new_state):
         self.state = new_state
 
@@ -26,28 +29,32 @@ class Game:
             if event.type == pygame.QUIT:
                 self.running = False
 
-            elif self.state == MENU:
-                if handle_menu_event(event):
-                    self.change_state(PLAYING)
-
             elif self.state == PLAYING:
                 pass
 
     def draw(self):
         self.screen.fill(WHITE)
 
-        if self.state == MENU: 
-            draw_menu(self.screen)
-
-        elif self.state == PLAYING:
+        if self.state == PLAYING:
             draw_board(self.screen)
 
-    pygame.display.flip()
+        pygame.display.flip()
 
     def run(self):
         while self.running:
-            self.handle_events()
-            self.draw()
+
+            if self.state == MENU:
+                self.game_config = run_menu(self.screen, self.clock)
+
+                if self.game_config is None:
+                    self.running = False
+                else:
+                    self.change_state(PLAYING)
+
+            elif self.state == PLAYING:
+                self.handle_events()
+                self.draw()
+
             self.clock.tick(FPS)
 
         pygame.quit()
