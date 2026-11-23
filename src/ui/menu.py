@@ -139,7 +139,7 @@ def run_menu(screen=None, clock=None):
         pygame.display.flip()
     return out["r"]
 def run_game(screen=None):
-    """Menu -> chọn chế độ -> truyền cấu hình sang Board -> hết ván quay lại menu."""
+    """Menu -> chọn chế độ -> truyền cấu hình -> hết ván -> menu."""
     pygame.init()
     screen = screen or pygame.display.set_mode((board.WIDTH, board.HEIGHT))
     while True:
