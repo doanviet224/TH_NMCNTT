@@ -1,10 +1,16 @@
+import os
+import sys
 import pygame
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+from config import WIDTH, HEIGHT, FPS
 
 class Board:
-    # ---------- Settings (live inside the class, not at module level) ----------
-    WIDTH, HEIGHT = 1000, 800
-    FPS = 60
+    # Lấy giá trị trực tiếp từ config.py (không gán cứng số ở đây nữa)
+    WIDTH = WIDTH
+    HEIGHT = HEIGHT
+    FPS = FPS
 
     BG_COLOR = (62, 78, 150)
     BOARD_COLOR = (30, 32, 80)
@@ -13,19 +19,13 @@ class Board:
     RED_COLOR = (255, 80, 80)
     GOLD_COLOR = (230, 180, 40)
 
-    INFINITE = False
-    INFINITE = True
-    SIZE = 15
-
     BORDER_PX = 10
     BOARD_MAX_PX = 650
-    CAM_SPEED = 400         # Pixels per second while holding W / A / S / D
+    CAM_SPEED = 400
 
-    def __init__(self, config=None):
-        self.config = config or {}
-
-        self.infinite = self.config.get("infinite", self.INFINITE)
-        self.size = self.config.get("size", self.SIZE)
+    def __init__(self, infinite, size):
+        self.infinite = infinite
+        self.size = size
 
         if self.infinite:
             self.real_cells = 100
@@ -47,10 +47,9 @@ class Board:
 
         self.font = pygame.font.Font(None, 32)
 
-        self.dragging = False       # True while the right mouse button is held to drag the view
+        self.dragging = False
 
     def clamp_camera(self):
-        """Keep the display area inside the real Board."""
         real_px = self.real_cells * self.cell
 
         self.real_left = min(self.real_left, self.board_left)
@@ -59,18 +58,17 @@ class Board:
         self.real_top = max(self.real_top, self.board_top + self.board_px - real_px)
 
     def move_camera(self, dt):
-        """WASD moves the view over the real Board (infinite mode only)."""
         if not self.infinite:
             return
 
         keys = pygame.key.get_pressed()
         step = round(self.CAM_SPEED * dt)
 
-        if keys[pygame.K_a]:        # View goes left -> the real Board slides right
+        if keys[pygame.K_a]:
             self.real_left += step
         if keys[pygame.K_d]:
             self.real_left -= step
-        if keys[pygame.K_w]:        # View goes up -> the real Board slides down
+        if keys[pygame.K_w]:
             self.real_top += step
         if keys[pygame.K_s]:
             self.real_top -= step
@@ -78,7 +76,6 @@ class Board:
         self.clamp_camera()
 
     def pos_to_cell(self, pos):
-        """Convert mouse position to real Board coordinates."""
         mx, my = pos
 
         if (self.board_left <= mx < self.board_left + self.board_px
@@ -92,15 +89,12 @@ class Board:
         return None
 
     def handle_event(self, event):
-        """Handle events received from game.py."""
-        # Left button: click a cell
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             cell = self.pos_to_cell(event.pos)
 
             if cell is not None:
                 print(f"Clicked cell: {cell}")
 
-        # Right button: press inside the Board, then drag to move the view (infinite mode only)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             if self.infinite and self.pos_to_cell(event.pos) is not None:
                 self.dragging = True
@@ -114,11 +108,9 @@ class Board:
                 self.real_top += event.rel[1]
                 self.clamp_camera()
             else:
-                # Button was released outside the window, so we never got the release event
                 self.dragging = False
 
     def update(self, dt):
-        """Update Board state."""
         self.move_camera(dt)
 
     def draw_border(self, screen):
@@ -177,7 +169,6 @@ class Board:
         )
 
     def draw(self, screen):
-        """Draw the entire Board."""
         screen.fill(self.BG_COLOR)
 
         self.draw_border(screen)
@@ -185,8 +176,14 @@ class Board:
         self.draw_mouse_pos(screen)
         self.draw_cell_info(screen)
 
+    def run_frame(self, screen, events, dt):
+        for event in events:
+            self.handle_event(event)
 
-# Standalone testing
+        self.update(dt)
+        self.draw(screen)
+
+
 def test_board():
     pygame.init()
 
@@ -194,21 +191,19 @@ def test_board():
     pygame.display.set_caption("Caro - Test Board")
 
     clock = pygame.time.Clock()
-    board = Board()
+    board = Board(infinite=True, size=15)
 
     running = True
 
     while running:
         dt = clock.tick(Board.FPS) / 1000
+        events = pygame.event.get()
 
-        for event in pygame.event.get():
+        for event in events:
             if event.type == pygame.QUIT:
                 running = False
-            else:
-                board.handle_event(event)
 
-        board.update(dt)
-        board.draw(screen)
+        board.run_frame(screen, events, dt)
 
         pygame.display.flip()
 
