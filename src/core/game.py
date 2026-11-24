@@ -1,13 +1,12 @@
 
 import pygame
 
+from src.core.states import MENU, PLAYING, PAUSED, GAME_OVER
 from config import WIDTH, HEIGHT, FPS, WINDOW_TITLE
 from src.ui.menu import Menu
 from src.board.board import Board
 
 
-MENU = 0
-PLAYING = 1
 
 
 class Game:
@@ -50,6 +49,12 @@ class Game:
 
                 if self.board is not None:
                     self.board.handle_event(event)
+
+            elif self.state == PAUSED:
+                pass
+
+            elif self.state == GAME_OVER:
+                pass
 
         # Kiểm tra xem người chơi đã nhấn PLAY chưa
         if self.state == MENU:
