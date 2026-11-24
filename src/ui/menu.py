@@ -145,7 +145,7 @@ class Menu:
             big(370, "PVP - 2 Players", PINK, lambda: self.pick_opponent("PVP"))
 
         elif self.page == "mode":
-            big(240, "TIC TAC TOE", GREEN, lambda: self.finish("tictactoe", 9, 3))
+            big(240, "TIC TAC TOE", GREEN, lambda: self.finish("tictactoe", 3, 3))
             big(330, "CLASSIC", BLUE, lambda: self.finish("classic", 15, 5))
             big(420, "CUSTOM", PURPLE, lambda: self.go("custom"))
 
