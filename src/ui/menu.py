@@ -11,7 +11,7 @@ RED, GRAY, ORANGE = (240, 74, 86), (96, 108, 200), (255, 150, 46)
 
 SIZE_MIN, SIZE_MAX, WIN_MIN = 4, 25, 3
 BACK = {"opponent": "start", "mode": "opponent", "custom": "mode"}
-CLICK_SOUND = "game-start-sound-effect.mp3"
+CLICK_SOUND = "game-start-sound-effect.mp3"   # âm thanh click lấy từ buttons.py
 
 
 class Menu:
@@ -38,7 +38,7 @@ class Menu:
         for widget, action in self.items:
             if widget.is_click(event):
                 action()
-                break  
+                break  # trang có thể đã đổi
 
     def draw(self, screen):
         screen.fill(BG)
@@ -55,7 +55,7 @@ class Menu:
         self._config, self.exit_requested = None, False
         self.go("start")
 
-    # ---------- Chuyển trang + lưu lựa chọn ----------
+    # ---------- Chuyển trang / lưu lựa chọn ----------
     def go(self, page):
         self.page = page
         self._build()
@@ -104,7 +104,7 @@ class Menu:
 
     @staticmethod
     def _load_sound(path):
-        """Nạp sound"""
+        """Nạp âm thanh click"""
         try:
             if not pygame.mixer.get_init():
                 pygame.mixer.init()
