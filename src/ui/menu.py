@@ -1,7 +1,7 @@
 import pygame
 
 try:
-    from .buttons import Button, ToggleSwitch, OptionButton   # package
+    from .buttons import Button, ToggleSwitch, OptionButton   # chạy trong package
 except ImportError:
     from buttons import Button, ToggleSwitch, OptionButton    # tui chạy trực tiếp để test
 
@@ -11,6 +11,7 @@ RED, GRAY, ORANGE = (240, 74, 86), (96, 108, 200), (255, 150, 46)
 
 SIZE_MIN, SIZE_MAX, WIN_MIN = 4, 25, 3
 BACK = {"opponent": "start", "mode": "opponent", "custom": "mode"}
+CLICK_SOUND = "game-start-sound-effect.mp3"
 
 
 class Menu:
@@ -21,6 +22,7 @@ class Menu:
         self.exit_requested = False
         self._config = None
         self._fonts = {}
+        self.click_sound = self._load_sound(CLICK_SOUND)
 
         # lựa chọn của player
         self.opponent, self.size, self.win = "PVE", 10, 5
@@ -36,7 +38,7 @@ class Menu:
         for widget, action in self.items:
             if widget.is_click(event):
                 action()
-                break  # trang có thể đã đổi
+                break  
 
     def draw(self, screen):
         screen.fill(BG)
@@ -53,7 +55,7 @@ class Menu:
         self._config, self.exit_requested = None, False
         self.go("start")
 
-    # ---------- Chuyển trang / lưu lựa chọn ----------
+    # ---------- Chuyển trang + lưu lựa chọn ----------
     def go(self, page):
         self.page = page
         self._build()
@@ -100,26 +102,38 @@ class Menu:
         for name, b in self.first_btns.items():
             b.selected = self.first == name
 
+    @staticmethod
+    def _load_sound(path):
+        """Nạp sound"""
+        try:
+            if not pygame.mixer.get_init():
+                pygame.mixer.init()
+            sound = pygame.mixer.Sound(path)
+            sound.set_volume(0.5)
+            return sound
+        except (pygame.error, FileNotFoundError):
+            return None
+
     def _font(self, size):
         if size not in self._fonts:
             self._fonts[size] = pygame.font.SysFont("TimesNewRoman", size, bold=True)
         return self._fonts[size]
 
     def _build(self):
-        W, items = self.W, []
+        W, items, snd = self.W, [], self.click_sound
         self.size_btns, self.first_btns = [], {}
 
         def big(y, text, color, fn):
-            items.append((Button(text, 300, 64, (W // 2 - 150, y), color, size_text=32), fn))
+            items.append((Button(text, 300, 64, (W // 2 - 150, y), color, size_text=32, sound=snd), fn))
 
         def step(y, key):
-            minus = Button("-", 50, 50, (W - 210, y), ORANGE, size_text=36)
-            plus = Button("+", 50, 50, (W - 80, y), GREEN, size_text=36)
+            minus = Button("-", 50, 50, (W - 210, y), ORANGE, size_text=36, sound=snd)
+            plus = Button("+", 50, 50, (W - 80, y), GREEN, size_text=36, sound=snd)
             items.extend([(minus, lambda: self.change(key, -1)), (plus, lambda: self.change(key, 1))])
             return [minus, plus]
 
         def switch(y, key):
-            sw = ToggleSwitch((W - 140, y), is_on=getattr(self, key))
+            sw = ToggleSwitch((W - 140, y), is_on=getattr(self, key), sound=snd)
             items.append((sw, lambda: self.set_option(key, sw.is_on)))
 
         if self.page == "start":
@@ -141,13 +155,13 @@ class Menu:
             switch(316, "infinite")
             switch(386, "block_ends")
             for i, (name, color) in enumerate([("black", (20, 20, 20)), ("white", WHITE)]):
-                opt = OptionButton(name.capitalize(), (W - 270 + i * 130, 460), icon_color=color)
+                opt = OptionButton(name.capitalize(), (W - 270 + i * 130, 460), icon_color=color, sound=snd)
                 self.first_btns[name] = opt
                 items.append((opt, lambda n=name: self.set_option("first", n)))
             big(570, "PLAY", GREEN, self.play_custom)
 
         if self.page != "start":
-            items.append((Button("< BACK", 110, 44, (16, 16), GRAY, size_text=24), self.back))
+            items.append((Button("< BACK", 110, 44, (16, 16), GRAY, size_text=24, sound=snd), self.back))
 
         self.items = items
         self._sync()
@@ -169,7 +183,7 @@ class Menu:
 if __name__ == "__main__":
     pygame.init()
     scr = pygame.display.set_mode((540, 720))
-    clock, menu, running = pygame.time.Clock(), None, True
+    clock, running = pygame.time.Clock(), True
     menu = Menu(scr)
     while running:
         clock.tick(60)
