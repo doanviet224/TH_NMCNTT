@@ -2,9 +2,12 @@
 import pygame
 
 from config import WIDTH, HEIGHT, FPS, WINDOW_TITLE
-from src.core.states import MENU, PLAYING
 from src.ui.menu import Menu
 from src.board.board import Board
+
+
+MENU = 0
+PLAYING = 1
 
 
 class Game:
@@ -16,63 +19,75 @@ class Game:
 
         self.clock = pygame.time.Clock()
         self.running = True
-
         self.state = MENU
 
         self.menu = Menu(self.screen)
         self.board = None
+        self.match_config = None
+
+    # ---------------- EVENTS ----------------
 
     def handle_events(self):
         for event in pygame.event.get():
 
             if event.type == pygame.QUIT:
                 self.running = False
-                continue
+                return
 
             if self.state == MENU:
                 self.menu.handle_event(event)
 
                 if self.menu.exit_requested:
                     self.running = False
-
-                elif self.menu.get_config() is not None:
-                    self.start_game()
+                    return
 
             elif self.state == PLAYING:
+
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.back_to_menu()
                         continue
 
-    def start_game(self):
-        config = self.menu.get_config()
+                if self.board is not None:
+                    self.board.handle_event(event)
 
-        if config is None:
-            return
+        # Kiểm tra xem người chơi đã nhấn PLAY chưa
+        if self.state == MENU:
+            config = self.menu.get_config()
 
-        size = config["size"]
-        infinite = config["infinite"]
+            if config is not None:
+                self.start_game(config)
 
-        # Infinite hiện tại chỉ dùng kích thước tối đa,
-        # chưa triển khai bàn cờ vô hạn.
-        if size is None:
-            size = 15
+    # ---------------- GAME CONTROL ----------------
+
+    def start_game(self, config):
+        self.match_config = config
 
         self.board = Board(
-            infinite = infinite,
-            size = size
+            infinite=config["infinite"],
+            size=config["size"]
         )
 
         self.state = PLAYING
 
     def back_to_menu(self):
         self.board = None
-        self.menu = Menu(self.screen)
+        self.match_config = None
+
+        self.menu.reset()
         self.state = MENU
 
+    # ---------------- UPDATE ----------------
+
     def update(self, dt):
-        if self.state == PLAYING and self.board is not None:
-            self.board.update(dt)
+        if self.state == MENU:
+            self.menu.update(dt) if hasattr(self.menu, "update") else None
+
+        elif self.state == PLAYING:
+            if self.board is not None:
+                self.board.update(dt)
+
+    # ---------------- DRAW ----------------
 
     def draw(self):
         if self.state == MENU:
@@ -84,6 +99,8 @@ class Game:
 
         pygame.display.flip()
 
+    # ---------------- MAIN LOOP ----------------
+
     def run(self):
         while self.running:
             dt = self.clock.tick(FPS) / 1000
@@ -94,3 +111,7 @@ class Game:
 
         pygame.quit()
 
+
+if __name__ == "__main__":
+    game = Game()
+    game.run()
