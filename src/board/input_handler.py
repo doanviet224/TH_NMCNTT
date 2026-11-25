@@ -36,18 +36,7 @@ class InputHandler:
         self.clamp_camera()
 
     def pos_to_cell(self, pos):
-        b = self.board
-        mx, my = pos
-
-        if (b.board_left <= mx < b.board_left + b.board_px
-            and b.board_top <= my < b.board_top + b.board_px):
-
-            col = (mx - b.real_left) // b.cell
-            row = (my - b.real_top) // b.cell
-
-            return row, col
-
-        return None
+        return self.board.pos_to_cell(pos)
 
     def handle_event(self, event):
         b = self.board
@@ -58,12 +47,12 @@ class InputHandler:
                 b.exit_requested = True
                 return
 
-            cell = self.pos_to_cell(event.pos)
+            cell = b.pos_to_cell(event.pos)
             if cell is not None:
                 print(f"Clicked cell: {cell}")
 
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
-            if b.infinite and self.pos_to_cell(event.pos) is not None:
+            if b.infinite and b.pos_to_cell(event.pos) is not None:
                 b.dragging = True
 
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 3:

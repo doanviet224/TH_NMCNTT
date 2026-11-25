@@ -55,7 +55,7 @@ class Renderer:
 
     def draw_cell_info(self, screen):
         b = self.board
-        cell = b.input_handler.pos_to_cell(pygame.mouse.get_pos())
+        cell = b.pos_to_cell(pygame.mouse.get_pos())
 
         if cell is None:
             label = "Cell: none"

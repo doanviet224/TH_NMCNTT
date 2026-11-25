@@ -56,6 +56,19 @@ class Board:
         self.exit_requested = False
         self.exit_button_rect = pygame.Rect(self.WIDTH - 55, 15, 40, 40)
 
+    def pos_to_cell(self, pos):
+        mx, my = pos
+
+        if (self.board_left <= mx < self.board_left + self.board_px
+                and self.board_top <= my < self.board_top + self.board_px):
+
+            col = (mx - self.real_left) // self.cell
+            row = (my - self.real_top) // self.cell
+
+            return row, col
+
+        return None
+
     def handle_event(self, event):
         self.input_handler.handle_event(event)
 
