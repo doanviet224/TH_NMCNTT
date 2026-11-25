@@ -51,6 +51,10 @@ class Game:
                 if self.board is not None:
                     self.board.handle_event(event)
 
+                    if self.board.exit_requested:
+                        self.back_to_menu()
+                        break
+
             elif self.state == PAUSED:
                 pass
 
