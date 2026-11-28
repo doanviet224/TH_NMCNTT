@@ -1,4 +1,3 @@
-
 import pygame
 
 
@@ -6,15 +5,20 @@ class InputHandler:
     def __init__(self, board):
         self.board = board
 
+    ###################################
+    # Giới hạn camera trong phạm vi bàn cờ
     def clamp_camera(self):
         b = self.board
-        real_px = b.real_cells * b.cell
+        real_px = b.real_cells * b.cell_size
 
         b.real_left = min(b.real_left, b.board_left)
         b.real_left = max(b.real_left, b.board_left + b.board_px - real_px)
         b.real_top = min(b.real_top, b.board_top)
         b.real_top = max(b.real_top, b.board_top + b.board_px - real_px)
+    ###################################
 
+    ###################################
+    # Di chuyển camera bằng phím WASD
     def move_camera(self, dt):
         b = self.board
 
@@ -34,23 +38,29 @@ class InputHandler:
             b.real_top -= step
 
         self.clamp_camera()
-
-    def pos_to_cell(self, pos):
-        return self.board.pos_to_cell(pos)
+    ###################################
 
     def handle_event(self, event):
         b = self.board
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            ###################################
             # Kiểm tra click nút thoát
             if b.exit_button_rect.collidepoint(event.pos):
                 b.exit_requested = True
                 return
+            ###################################
 
+            ###################################
+            # Kiểm tra click chọn ô cờ & gửi thẳng tọa độ cho GameLogic
             cell = b.pos_to_cell(event.pos)
             if cell is not None:
-                print(f"Clicked cell: {cell}")
+                if b.game_logic is not None:
+                    b.game_logic.notify_cell_clicked(*cell)
+            ###################################
 
+        ###################################
+        # Kéo thả bàn cờ bằng chuột phải
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             if b.infinite and b.pos_to_cell(event.pos) is not None:
                 b.dragging = True
@@ -65,6 +75,10 @@ class InputHandler:
                 self.clamp_camera()
             else:
                 b.dragging = False
+        ###################################
 
+    ###################################
+    # Cập nhật theo frame
     def update(self, dt):
         self.move_camera(dt)
+    ###################################

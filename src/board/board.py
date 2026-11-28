@@ -7,7 +7,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")
 
 from config import WIDTH, HEIGHT, FPS
 from src.board.input_handler import InputHandler
-from src.board.renderer import Renderer
+from src.ui.renderer import Renderer
+from src.logic.game_logic import GameLogic
 
 
 class Board:
@@ -26,9 +27,10 @@ class Board:
     BOARD_MAX_PX = 650
     CAM_SPEED = 400
 
-    def __init__(self, infinite, size):
+    def __init__(self, infinite, size, game_logic=None):
         self.infinite = infinite
         self.size = size
+        self.game_logic = game_logic
 
         if self.infinite:
             self.real_cells = 100
@@ -39,14 +41,14 @@ class Board:
             self.view_cells = self.size
             self.start_row, self.start_col = 0, 0
 
-        self.cell = int(self.BOARD_MAX_PX // self.view_cells)
-        self.board_px = int(self.cell * self.view_cells)
+        self.cell_size = int(self.BOARD_MAX_PX // self.view_cells)
+        self.board_px = int(self.cell_size * self.view_cells)
 
         self.board_left = (self.WIDTH - self.board_px) // 2
         self.board_top = (self.HEIGHT - self.board_px) // 2
 
-        self.real_left = self.board_left - self.start_col * self.cell
-        self.real_top = self.board_top - self.start_row * self.cell
+        self.real_left = self.board_left - self.start_col * self.cell_size
+        self.real_top = self.board_top - self.start_row * self.cell_size
 
         self.dragging = False
 
@@ -62,12 +64,23 @@ class Board:
         if (self.board_left <= mx < self.board_left + self.board_px
                 and self.board_top <= my < self.board_top + self.board_px):
 
-            col = (mx - self.real_left) // self.cell
-            row = (my - self.real_top) // self.cell
+            col = (mx - self.real_left) // self.cell_size
+            row = (my - self.real_top) // self.cell_size
 
             return row, col
 
         return None
+
+    def cell_to_rect(self, row, col):
+        top_left     = (self.real_left + col * self.cell_size, self.real_top + row * self.cell_size)
+        bottom_right = (top_left[0] + self.cell_size,          top_left[1] + self.cell_size)
+        return top_left, bottom_right
+
+    def cell_to_center(self, row, col):
+        top_left, bottom_right = self.cell_to_rect(row, col)
+        cx = (top_left[0] + bottom_right[0]) // 2
+        cy = (top_left[1] + bottom_right[1]) // 2
+        return cx, cy
 
     def handle_event(self, event):
         self.input_handler.handle_event(event)
@@ -76,7 +89,8 @@ class Board:
         self.input_handler.update(dt)
 
     def draw(self, screen):
-        self.renderer.draw(screen)
+        board_data = self.game_logic.board if self.game_logic is not None else None
+        self.renderer.draw(screen, board_data)
 
     def run_frame(self, screen, events, dt):
         for event in events:
@@ -94,6 +108,7 @@ def test_board():
 
     clock = pygame.time.Clock()
     board = Board(infinite=True, size=15)
+    board.game_logic = GameLogic(board.real_cells)
 
     running = True
 
