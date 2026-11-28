@@ -5,7 +5,7 @@ from src.core.states import MENU, PLAYING, PAUSED, GAME_OVER
 from config import WIDTH, HEIGHT, FPS, WINDOW_TITLE
 from src.ui.menu import Menu
 from src.board.board import Board
-from src.board.renderer import Renderer
+from src.ui.renderer import Renderer
 
 
 
